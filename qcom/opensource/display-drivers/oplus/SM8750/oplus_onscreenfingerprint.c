@@ -2539,6 +2539,7 @@ enum hrtimer_restart oplus_ofp_notify_uiready_timer_handler(struct hrtimer *time
 static int oplus_ofp_send_uiready_event(unsigned int ui_status)
 {
 	enum panel_event_notification_type notify_type = DRM_PANEL_EVENT_ONSCREENFINGERPRINT_UI_DISAPPEAR;
+	struct oplus_ofp_params *p_oplus_ofp_params = oplus_ofp_get_params(oplus_ofp_display_id);
 
 	OFP_DEBUG("start\n");
 
@@ -2549,6 +2550,11 @@ static int oplus_ofp_send_uiready_event(unsigned int ui_status)
 		notify_type = DRM_PANEL_EVENT_ONSCREENFINGERPRINT_UI_READY;
 	} else {
 		notify_type = DRM_PANEL_EVENT_ONSCREENFINGERPRINT_UI_DISAPPEAR;
+		if (p_oplus_ofp_params) {
+			WRITE_ONCE(p_oplus_ofp_params->fp_touch_state, 0);
+			OFP_INFO("oplus_ofp_fp_touch_state:%u on uiready disappear\n", READ_ONCE(p_oplus_ofp_params->fp_touch_state));
+			OPLUS_OFP_TRACE_INT("oplus_ofp_fp_touch_state", READ_ONCE(p_oplus_ofp_params->fp_touch_state));
+		}
 	}
 
 	oplus_event_data_notifier_trigger(notify_type, 0, true);
@@ -3492,6 +3498,9 @@ int oplus_ofp_power_mode_handle(void *dsi_display, int power_mode)
 		break;
 
 	case SDE_MODE_DPMS_ON:
+		WRITE_ONCE(p_oplus_ofp_params->fp_touch_state, 0);
+		OPLUS_OFP_TRACE_INT("oplus_ofp_fp_touch_state", READ_ONCE(p_oplus_ofp_params->fp_touch_state));
+
 		if (p_oplus_ofp_params->doze_active) {
 			p_oplus_ofp_params->doze_active = false;
 			OFP_INFO("oplus_ofp_doze_active:%d\n", p_oplus_ofp_params->doze_active);
@@ -3512,6 +3521,9 @@ int oplus_ofp_power_mode_handle(void *dsi_display, int power_mode)
 		break;
 
 	case SDE_MODE_DPMS_OFF:
+		WRITE_ONCE(p_oplus_ofp_params->fp_touch_state, 0);
+		OPLUS_OFP_TRACE_INT("oplus_ofp_fp_touch_state", READ_ONCE(p_oplus_ofp_params->fp_touch_state));
+
 		if (p_oplus_ofp_params->doze_active) {
 			p_oplus_ofp_params->doze_active = false;
 			OFP_INFO("oplus_ofp_doze_active:%d\n", p_oplus_ofp_params->doze_active);
@@ -3907,6 +3919,7 @@ int oplus_ofp_touchpanel_event_notifier_call(struct notifier_block *nb, unsigned
 	struct touchpanel_event *tp_event = (struct touchpanel_event *)data;
 	struct dsi_display *display = get_main_display();
 	struct sde_connector *sde_conn;
+	struct oplus_ofp_params *p_oplus_ofp_params = oplus_ofp_get_params(oplus_ofp_display_id);
 	struct drm_event event;
 
 	if (!display || !display->panel) {
@@ -3924,9 +3937,16 @@ int oplus_ofp_touchpanel_event_notifier_call(struct notifier_block *nb, unsigned
 
 	OPLUS_OFP_TRACE_BEGIN("oplus_ofp_touchpanel_event_notifier_call");
 
+	if (!p_oplus_ofp_params) {
+		OFP_ERR("Invalid params\n");
+		return NOTIFY_OK;
+	}
+
 	if (tp_event) {
 		if (action == EVENT_ACTION_FOR_FINGPRINT) {
 			OFP_DEBUG("EVENT_ACTION_FOR_FINGPRINT\n");
+			WRITE_ONCE(p_oplus_ofp_params->fp_touch_state, !!tp_event->touch_state);
+			OPLUS_OFP_TRACE_INT("oplus_ofp_fp_touch_state", READ_ONCE(p_oplus_ofp_params->fp_touch_state));
 
 			if (tp_event->touch_state == 1) {
 				OFP_INFO("tp touchdown\n");
@@ -3949,6 +3969,19 @@ int oplus_ofp_touchpanel_event_notifier_call(struct notifier_block *nb, unsigned
 	OFP_DEBUG("end\n");
 
 	return NOTIFY_OK;
+}
+
+ssize_t oplus_ofp_get_fp_touch_state_attr(struct kobject *obj,
+	struct kobj_attribute *attr, char *buf)
+{
+	struct oplus_ofp_params *p_oplus_ofp_params = oplus_ofp_get_params(oplus_ofp_display_id);
+
+	if (!p_oplus_ofp_params) {
+		OFP_ERR("Invalid params\n");
+		return sysfs_emit(buf, "0\n");
+	}
+
+	return sysfs_emit(buf, "%u\n", READ_ONCE(p_oplus_ofp_params->fp_touch_state));
 }
 
 /*

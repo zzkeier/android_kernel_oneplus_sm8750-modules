@@ -157,6 +157,7 @@ struct oplus_ofp_params {
 	bool need_to_update_lhbm_pressed_icon_gamma;	/* indicates whether lhbm pressed icon gamma needs to be read and updated or not */
 	bool hbm_state;									/* indicates whether panel is hbm state or not */
 	bool panel_hbm_status;							/* indicates whether hbm cmds are taking effect in panel module or not */
+	unsigned int fp_touch_state;					/* indicates latest fingerprint touch state from touchpanel notifier, 1:down 0:up */
 	bool fp_press;									/* indicates whether pressed icon layer is ready or not */
 	unsigned int pressed_icon_status;				/* indicates whether pressed icon has been displayed in panel module or not */
 	unsigned int notifier_chain_value;				/* ui ready notifier chain value */
@@ -329,6 +330,8 @@ ssize_t oplus_ofp_get_dimlayer_hbm_attr(struct kobject *obj,
 int oplus_ofp_notify_fp_press(void *buf);
 ssize_t oplus_ofp_notify_fp_press_attr(struct kobject *obj,
 	struct kobj_attribute *attr, const char *buf, size_t count);
+ssize_t oplus_ofp_get_fp_touch_state_attr(struct kobject *obj,
+	struct kobj_attribute *attr, char *buf);
 /* ----- aod part ----- */
 /* aod_light_mode_set */
 int oplus_ofp_set_aod_light_mode(void *buf);

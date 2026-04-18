@@ -2776,6 +2776,7 @@ static OPLUS_ATTR(shell_temp, S_IRUGO | S_IWUSR, oplus_temp_compensation_get_she
 #endif /* OPLUS_FEATURE_DISPLAY_TEMP_COMPENSATION */
 #ifdef OPLUS_FEATURE_DISPLAY_ONSCREENFINGERPRINT
 static OPLUS_ATTR(fp_type, S_IRUGO | S_IWUSR, oplus_ofp_get_fp_type_attr, oplus_ofp_set_fp_type_attr);
+static OPLUS_ATTR(fp_touch_state, S_IRUGO, oplus_ofp_get_fp_touch_state_attr, NULL);
 static OPLUS_ATTR(hbm, S_IRUGO | S_IWUSR, oplus_ofp_get_hbm_attr, oplus_ofp_set_hbm_attr);
 static OPLUS_ATTR(aor, S_IRUGO | S_IWUSR, oplus_ofp_get_aor_attr, oplus_ofp_set_aor_attr);
 static OPLUS_ATTR(dimlayer_hbm, S_IRUGO | S_IWUSR, oplus_ofp_get_dimlayer_hbm_attr, oplus_ofp_set_dimlayer_hbm_attr);
@@ -2845,6 +2846,7 @@ static struct attribute *oplus_display_attrs[] = {
 #endif /* OPLUS_FEATURE_DISPLAY_TEMP_COMPENSATION */
 #ifdef OPLUS_FEATURE_DISPLAY_ONSCREENFINGERPRINT
 	&oplus_attr_fp_type.attr,
+	&oplus_attr_fp_touch_state.attr,
 	&oplus_attr_hbm.attr,
 	&oplus_attr_aor.attr,
 	&oplus_attr_dimlayer_hbm.attr,
